@@ -1,0 +1,16 @@
+{
+  "name": "google-actions-rpsls",
+  "description": "Rock Paper Scissors Lizard Spock as a Google Action",
+  "version": "0.0.1",
+  "dependencies": {
+    "actions-on-google": "^1.7.0",
+    "body-parser": "^1.18.2",
+    "compression": "^1.7.1",
+    "express": "^4.16.2",
+    "ejs": "^2.5.7",
+    "mongoose": "~4.13.6"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
