@@ -8,10 +8,10 @@ expressApp.use(bodyParser.urlencoded({extended: false}));
 expressApp.use(bodyParser.json({extended: false}));
 
 function mainIntentHandler(app) {
-    app.ask('Hey Mom, It works!');
+    app.ask('Hey Ma, It works!');
 }
 
-expressApp.use((request, response) => {
+expressApp.post('/', (request, response) => {
     console.log('Request body: ' + JSON.stringify(request.body));
 
     const actionApp = new ActionsSdkApp({
