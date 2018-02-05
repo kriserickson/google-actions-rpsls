@@ -2,16 +2,14 @@ const ActionsSdkApp = require('actions-on-google').ActionsSdkApp;
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const rpsls = require('./rpsls');
+
 const expressApp = express();
 
 expressApp.use(bodyParser.urlencoded({extended: false}));
 expressApp.use(bodyParser.json({extended: false}));
 
-function mainIntentHandler(app) {
-    app.ask('Hey Ma, It works!');
-}
-
-expressApp.post('/', (request, response) => {
+expressApp.use((request, response) => {
     console.log('Request body: ' + JSON.stringify(request.body));
 
     const actionApp = new ActionsSdkApp({
@@ -23,7 +21,9 @@ expressApp.post('/', (request, response) => {
     // actions client library
     const actionMap = new Map();
 
-    actionMap.set(actionApp.StandardIntents.MAIN, mainIntentHandler);
+    actionMap.set(actionApp.StandardIntents.MAIN,  rpsls.mainIntentHandler);
+    actionMap.set(actionApp.StandardIntents.OPTION, rpsls.optionIntentHandler);
+    actionMap.set(actionApp.StandardIntents.TEXT,  rpsls.textIntentHandler);
 
     actionApp.handleRequestAsync(actionMap).then(() => {
         console.log('Success handling GoogleAction request');
