@@ -3,7 +3,53 @@ const OPTION_START_GAME = 'Start Game';
 const OPTION_AGAIN = 'Again';
 const OPTION_END = 'End';
 
-const CHOICE_ARRAY = ['rock','paper','scissors','lizard','spock'];
+const GAME_CHOICES = Object.freeze({SCISSORS_VS_PAPER : 0, PAPER_VS_ROCK: 1, ROCK_VS_LIZARD: 2, LIZARD_VS_SPOCK: 3,
+    SPOCK_VS_SCISSOR: 4, SCISSOR_VS_LIZARD: 5, LIZARD_VS_PAPER: 6, PAPER_VS_SPOCK: 7, SPOCK_VS_ROCK: 8, ROCK_VS_SCISSOR: 9});
+
+const CHOICE_NAMES = Object.freeze({ROCK: 'rock', PAPER: 'paper', SCISSOR: 'scissors', LIZARD: 'lizard', SPOCK: 'spock'});
+
+const OUTCOME_DESCRIPTIONS = {
+    [GAME_CHOICES.SCISSORS_VS_PAPER] : 'Scissors cuts Paper.',
+    [GAME_CHOICES.SCISSOR_VS_LIZARD]: 'Scissors decapitates Lizard.',
+    [GAME_CHOICES.PAPER_VS_ROCK] : 'Paper covers Rock.',
+    [GAME_CHOICES.PAPER_VS_SPOCK]: 'Paper disproves Spock.',
+    [GAME_CHOICES.LIZARD_VS_SPOCK] : 'Lizard poisons Spock',
+    [GAME_CHOICES.LIZARD_VS_PAPER]: 'Lizard eats Paper.',
+    [GAME_CHOICES.SPOCK_VS_SCISSOR] : 'Spock smashes Scissors.',
+    [GAME_CHOICES.SPOCK_VS_ROCK]: 'Spock vaporizes Rock.',
+    [GAME_CHOICES.ROCK_VS_LIZARD] :'Rock crushes Lizard',
+    [GAME_CHOICES.ROCK_VS_SCISSOR]: '(and as it always has), Rock crushes Scissors.'
+};
+
+const CHOICE_MATRIX = {
+    [CHOICE_NAMES.ROCK + CHOICE_NAMES.SCISSOR]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.ROCK_VS_SCISSOR], win: true},
+    [CHOICE_NAMES.ROCK + CHOICE_NAMES.LIZARD]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.ROCK_VS_LIZARD], win: true},
+    [CHOICE_NAMES.ROCK + CHOICE_NAMES.PAPER]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.PAPER_VS_ROCK], win: false},
+    [CHOICE_NAMES.ROCK + CHOICE_NAMES.SPOCK]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.SPOCK_VS_ROCK], win: false},
+
+    [CHOICE_NAMES.PAPER + CHOICE_NAMES.ROCK]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.PAPER_VS_ROCK], win: true},
+    [CHOICE_NAMES.PAPER + CHOICE_NAMES.SPOCK]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.PAPER_VS_SPOCK], win: true},
+    [CHOICE_NAMES.PAPER + CHOICE_NAMES.SCISSOR]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.SCISSORS_VS_PAPER], win: false},
+    [CHOICE_NAMES.PAPER + CHOICE_NAMES.LIZARD]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.LIZARD_VS_PAPER], win: false},
+
+    [CHOICE_NAMES.SCISSOR + CHOICE_NAMES.PAPER]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.SCISSORS_VS_PAPER], win: true},
+    [CHOICE_NAMES.SCISSOR + CHOICE_NAMES.LIZARD]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.SCISSOR_VS_LIZARD], win: true},
+    [CHOICE_NAMES.SCISSOR + CHOICE_NAMES.ROCK]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.ROCK_VS_SCISSOR], win: false},
+    [CHOICE_NAMES.SCISSOR + CHOICE_NAMES.SPOCK]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.SPOCK_VS_SCISSOR], win: false},
+
+    [CHOICE_NAMES.LIZARD + CHOICE_NAMES.SPOCK]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.LIZARD_VS_SPOCK], win: true},
+    [CHOICE_NAMES.LIZARD + CHOICE_NAMES.PAPER]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.LIZARD_VS_PAPER], win: true},
+    [CHOICE_NAMES.LIZARD + CHOICE_NAMES.ROCK]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.ROCK_VS_LIZARD], win: false},
+    [CHOICE_NAMES.LIZARD + CHOICE_NAMES.SCISSOR]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.SCISSOR_VS_LIZARD], win: false},
+
+    [CHOICE_NAMES.SPOCK + CHOICE_NAMES.SCISSOR]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.SPOCK_VS_SCISSOR], win: true},
+    [CHOICE_NAMES.SPOCK + CHOICE_NAMES.ROCK]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.SPOCK_VS_ROCK], win: true},
+    [CHOICE_NAMES.SPOCK + CHOICE_NAMES.PAPER]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.PAPER_VS_SPOCK], win: false},
+    [CHOICE_NAMES.SPOCK + CHOICE_NAMES.LIZARD]: {outcome: OUTCOME_DESCRIPTIONS[GAME_CHOICES.LIZARD_VS_SPOCK], win: false},
+
+};
+
+const CHOICE_ARRAY = [CHOICE_NAMES.ROCK, CHOICE_NAMES.PAPER, CHOICE_NAMES.SCISSOR, CHOICE_NAMES.LIZARD, CHOICE_NAMES.SPOCK];
 
 let getStartList = function (app) {
     let list = app.buildList('Start Game or Instructions');
@@ -24,7 +70,7 @@ function mainIntentHandler(app) {
                   <s>If you need instructions, say Instructions.</s>
                   <s>To play the game, say Start Game</s>
               </p>
-            </speak>`), list);
+            </speak>`, ['Say Instructions or Start Game']), list);
 
 }
 
@@ -34,16 +80,16 @@ function readInstructions(app) {
     app.askWithList(app.buildInputPrompt(true,
     `<speak>
       <p>
-        <s>Scissors cuts Paper.</s><break time=".3s"/>
-        <s>Paper covers Rock.</s><break time=".5s"/>
-        <s>Rock crushes Lizard.</s><break time=".3s"/>
-        <s>Lizard poisons Spock.</s><break time=".3s"/>
-        <s>Spock smashes Scissors.</s><break time=".3s"/>
-        <s>Scissors decapitates Lizard.</s><break time=".3s"/>
-        <s>Lizard eats Paper.</s><break time=".3s"/>
-        <s>Paper disproves Spock.</s><break time=".3s"/>
-        <s>Spock vaporizes Rock.</s><break time=".7s"/>
-        <s>(and as it always has), Rock crushes Scissors</s>
+        <s>${OUTCOME_DESCRIPTIONS[GAME_CHOICES.SCISSORS_VS_PAPER]}</s><break time=".3s"/>
+        <s>${OUTCOME_DESCRIPTIONS[GAME_CHOICES.PAPER_VS_ROCK]}</s><break time=".5s"/>
+        <s>${OUTCOME_DESCRIPTIONS[GAME_CHOICES.ROCK_VS_LIZARD]}</s><break time=".3s"/>
+        <s>${OUTCOME_DESCRIPTIONS[GAME_CHOICES.LIZARD_VS_SPOCK]}</s><break time=".3s"/>
+        <s>${OUTCOME_DESCRIPTIONS[GAME_CHOICES.SPOCK_VS_SCISSOR]}</s><break time=".3s"/>
+        <s>${OUTCOME_DESCRIPTIONS[GAME_CHOICES.SCISSOR_VS_LIZARD]}</s><break time=".3s"/>
+        <s>${OUTCOME_DESCRIPTIONS[GAME_CHOICES.LIZARD_VS_PAPER]}</s><break time=".3s"/>
+        <s>${OUTCOME_DESCRIPTIONS[GAME_CHOICES.PAPER_VS_SPOCK]}</s><break time=".3s"/>
+        <s>${OUTCOME_DESCRIPTIONS[GAME_CHOICES.SPOCK_VS_ROCK]}</s><break time=".7s"/>
+        <s>${OUTCOME_DESCRIPTIONS[GAME_CHOICES.ROCK_VS_SCISSOR]}</s>
       </p>
       <break time="1s"/>
       <p>
@@ -72,17 +118,6 @@ function optionIntentHandler(app) {
         startGame(app);
     } else if (param === OPTION_END) {
         app.tell('Bye');
-    } else {
-        console.warn('Invalid choice, param = ' + param);
-        const list = getStartList(app);
-        app.askWithList(app.buildInputPrompt(true,
-                `<speak>
-              <p>
-                  <s>I am sorry, I did not understand.</s>
-                  <s>If you need instructions, say Instructions.</s>
-                  <s>To play the game, say Start Game</s>
-              </p>
-            </speak>`), list);
     }
 }
 
@@ -97,69 +132,8 @@ function returnResults(app, userChoice) {
           </p>
         </speak>`));
     } else {
-        let win = false;
-        let result = '';
-        if (userChoice === 'rock') {
-            if (computerChoice === 'spock') {
-                result = 'Spock vaporizes Rock';
-            } else if (computerChoice === 'paper') {
-                result = 'Paper covers Rocks';
-            } else if (computerChoice === 'lizard') {
-                win = true;
-                result = 'Rock crushes Lizard'
-            } else if (computerChoice === 'scissors') {
-                win = true;
-                result = 'as always, Rock crushes scissors';
-            }
-        } else if (userChoice === 'paper') {
-            if (computerChoice === 'spock') {
-                win = true;
-                result = 'Paper disproves Spock';
-            } else if (computerChoice === 'rock') {
-                win = true;
-                result = 'Paper covers Rocks';
-            } else if (computerChoice === 'lizard') {
-                result = 'Lizard eats Paper'
-            } else if (computerChoice === 'scissors') {
-                result = 'Scissors cuts Paper';
-            }
-        } else if (userChoice === 'scissors') {
-            if (computerChoice === 'spock') {
-                result = 'Spock smashes Scissors';
-            } else if (computerChoice === 'rock') {
-                result = 'as always, Rock crushes scissors';
-            } else if (computerChoice === 'lizard') {
-                win = true;
-                result = 'Scissors decapitates Lizard'
-            } else if (computerChoice === 'paper') {
-                win = true;
-                result = 'Scissors cuts Paper';
-            }
-        } else if (userChoice === 'lizard') {
-            if (computerChoice === 'paper') {
-                win = true;
-                result = 'Lizard eats Paper';
-            } else if (computerChoice === 'rock') {
-                result = 'Rock crushes Lizard';
-            } else if (computerChoice === 'spock') {
-                win = true;
-                result = 'Lizard poisons Spock'
-            } else if (computerChoice === 'scissors') {
-                result = 'Scissors decapitates Lizard';
-            }
-        } else if (userChoice === 'spock') {
-            if (computerChoice === 'paper') {
-                result = 'Paper disproves Spock';
-            } else if (computerChoice === 'rock') {
-                win = true;
-                result = 'Spock vaporizes Rock';
-            } else if (computerChoice === 'lizard') {
-                result = 'Lizard poisons Spock'
-            } else if (computerChoice === 'scissors') {
-                win = true;
-                result = 'Spock smashes Scissors';
-            }
-        } else {
+        const result = CHOICE_MATRIX[userChoice + computerChoice];
+        if (!userChoice) {
             console.error('Impossible choice: ' + userChoice);
             app.ask('Something has gone wrong, you picked: ' + userChoice);
             return;
@@ -171,7 +145,7 @@ function returnResults(app, userChoice) {
             app.buildOptionItem(OPTION_END, ['Stop', 'No']).setTitle('End')
         ]);
 
-        const message = '<s>' + result + '</s>' + (win ? '<s>You Won!</s>' : '<s>You lost.</s>');
+        const message = '<s>' + result.outcome + '</s>' + (result.win ? '<s>You Won!</s>' : '<s>You lost.</s>');
 
         app.askWithList(app.buildInputPrompt(true,
                 `<speak>
@@ -187,6 +161,7 @@ function returnResults(app, userChoice) {
 }
 
 function textIntentHandler(app) {
+    console.log('TEXT intent triggered.');
     const rawInput = app.getRawInput();
     let res;
     if (res = rawInput.match(/^\s*(rock|paper|scissors|lizard|spock)\s*$/i)) {
