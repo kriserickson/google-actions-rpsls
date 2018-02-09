@@ -72,7 +72,7 @@ function mainIntentHandler(app) {
                   <s>If you need instructions, say Instructions.</s>
                   <s>To play the game, say Start Game</s>
               </p>
-            </speak>`, ['Say Instructions or Start Game']), list, {state: STATES.INITIAL_STATE, wins: 0, loss: 0});
+            </speak>`, ['Say Instructions or Start Game']), list, {state: STATES.INITIAL_STATE});
 
 }
 
@@ -154,16 +154,16 @@ function returnResults(app, userChoice) {
         ]);
 
         dialogState.state = STATES.END_GAME;
-        dialogState.wins += result.win ? 1 : 0;
-        dialogState.loss += result.win ? 0 : 1;
+        app.userStorage.wins = (app.userStorage.wins || 0) + (result.win ? 1 : 0);
+        app.userStorage.losses = (app.userStorage.losses || 0) + (result.win ? 0 : 1);
 
         const winLost = result.win ? 'You Won!' : 'You lost.';
 
         const message = `<s>${result.outcome}</s><break time=".3s"/>
                 <s>${winLost}</s>
                 <break time=".5s"/>
-                <s >You have won <say-as interpret-as="cardinal">${dialogState.wins}</say-as> games, 
-                and lost <say-as interpret-as="cardinal">${dialogState.loss}</say-as> games.</s>
+                <s >You have won <say-as interpret-as="cardinal">${app.userStorage.wins}</say-as> games, 
+                and lost <say-as interpret-as="cardinal">${app.userStorage.losses}</say-as> games.</s>
                 <break time=".7s"/>`;
 
         app.askWithList(app.buildInputPrompt(true,
