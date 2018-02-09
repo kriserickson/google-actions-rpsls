@@ -8,6 +8,8 @@ const GAME_CHOICES = Object.freeze({SCISSORS_VS_PAPER : 0, PAPER_VS_ROCK: 1, ROC
 
 const CHOICE_NAMES = Object.freeze({ROCK: 'rock', PAPER: 'paper', SCISSOR: 'scissors', LIZARD: 'lizard', SPOCK: 'spock'});
 
+const STATES = Object.freeze({INITIAL_STATE: 0, START_GAME: 1, END_GAME: 2});
+
 const OUTCOME_DESCRIPTIONS = {
     [GAME_CHOICES.SCISSORS_VS_PAPER] : 'Scissors cuts Paper.',
     [GAME_CHOICES.SCISSOR_VS_LIZARD]: 'Scissors decapitates Lizard.',
@@ -70,13 +72,15 @@ function mainIntentHandler(app) {
                   <s>If you need instructions, say Instructions.</s>
                   <s>To play the game, say Start Game</s>
               </p>
-            </speak>`, ['Say Instructions or Start Game']), list);
+            </speak>`, ['Say Instructions or Start Game']), list, {state: STATES.INITIAL_STATE, wins: 0, loss: 0});
 
 }
 
 function readInstructions(app) {
     console.log('Read Instructions.');
     const list = getStartList(app);
+    const dialogState = app.getDialogState();
+    dialogState.state = STATES.INITIAL_STATE;
     app.askWithList(app.buildInputPrompt(true,
     `<speak>
       <p>
@@ -96,16 +100,18 @@ function readInstructions(app) {
         <s>To play the game, say Start Game</s>
         <s>To repeat the instructions, say instructions</s>
       </p>
-    </speak>`), list);
+    </speak>`), list, dialogState);
 }
 
 function startGame(app) {
+    const dialogState = app.getDialogState();
+    dialogState.state = STATES.START_GAME;
     app.ask(app.buildInputPrompt(true,
    `<speak>
       <p>
         <s>Do you pick Rock, Paper, Scissors, Lizard or Spock</s>
       </p>
-    </speak>`));
+    </speak>`), dialogState);
 }
 
 // React to list or carousel selection
@@ -123,14 +129,16 @@ function optionIntentHandler(app) {
 
 function returnResults(app, userChoice) {
     const computerChoice = CHOICE_ARRAY[Math.floor(Math.random() * CHOICE_ARRAY.length)];
+    const dialogState = app.getDialogState();
     if (computerChoice === userChoice) {
+        dialogState.state = STATES.START_GAME;
         app.ask(app.buildInputPrompt(true,
     `<speak>
           <p>
             <s>I also picked ${userChoice}.</s>
             <s>Try again, do you pick Rock, Paper, Scissors, Lizard or Spock</s>
           </p>
-        </speak>`));
+        </speak>`), dialogState);
     } else {
         const result = CHOICE_MATRIX[userChoice + computerChoice];
         if (!userChoice) {
@@ -145,18 +153,27 @@ function returnResults(app, userChoice) {
             app.buildOptionItem(OPTION_END, ['Stop', 'No']).setTitle('End')
         ]);
 
-        const message = '<s>' + result.outcome + '</s>' + (result.win ? '<s>You Won!</s>' : '<s>You lost.</s>');
+        dialogState.state = STATES.END_GAME;
+        dialogState.wins += result.win ? 1 : 0;
+        dialogState.loss += result.win ? 0 : 1;
+
+        const winLost = result.win ? 'You Won!' : 'You lost.';
+
+        const message = `<s>${result.outcome}</s><break time=".3s"/>
+                <s>${winLost}</s>
+                <break time=".5s"/>
+                <s >You have won <say-as interpret-as="cardinal">${dialogState.wins}</say-as> games, 
+                and lost <say-as interpret-as="cardinal">${dialogState.loss}</say-as> games.</s>
+                <break time=".7s"/>`;
 
         app.askWithList(app.buildInputPrompt(true,
                 `<speak>
           <p>
               ${message}
-              <s>To play again, say again.</s>
+              <s>To play again, say again.<break time=".3s"/></s>              
               <s>To quit say end.</s>
           </p>
-        </speak>`), list);
-
-
+        </speak>`), list, dialogState);
     }
 }
 
@@ -167,13 +184,28 @@ function textIntentHandler(app) {
     if (res = rawInput.match(/^\s*(rock|paper|scissors|lizard|spock)\s*$/i)) {
         returnResults(app, res[1].toLowerCase());
     } else {
-        app.ask(app.buildInputPrompt(true,
-   `<speak>
-      <p>
-        <s>${rawInput} is not a valid choice.</s>
-        <s>Do you pick Rock, Paper, Scissors, Lizard or Spock</s>
-      </p>
-    </speak>`));
+        const dialogState = app.getDialogState();
+        if (dialogState.state === STATES.START_GAME) {
+            app.ask(app.buildInputPrompt(true,
+                    `<speak>
+                       <p>
+                         <s>${rawInput} is not a valid choice.</s>
+                         <s>Do you pick Rock, Paper, Scissors, Lizard or Spock</s>
+                       </p>
+                     </speak>`), dialogState);
+        } else if (dialogState.state === STATES.INITIAL_STATE || dialogState.state === STATES.END_GAME) {
+            const list = getStartList(app);
+            app.askWithList(app.buildInputPrompt(true,
+                    `<speak>
+              <p>
+                  <s>${rawInput} is not a valid choice.</s>
+                  <s>If you need instructions, say Instructions.</s>
+                  <s>To play the game, say Start Game</s>
+              </p>
+            </speak>`, ['Say Instructions or Start Game']), list, dialogState);
+        } else {
+            app.tell('Impossible choice, ending!');
+        }
     }
 }
 

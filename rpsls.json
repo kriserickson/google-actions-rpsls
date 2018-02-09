@@ -14,7 +14,7 @@
   "conversations": {
     "main": {
       "name": "main",
-      "url": "https://CHANGE-ME.ngrok.io",
+      "url": "https://b000a11c.ngrok.io",
       "fulfillmentApiVersion": 2
     }
   }
