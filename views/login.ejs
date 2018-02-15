@@ -1,0 +1,77 @@
+<html>
+<head>
+    <link href="/public/css/style.css" rel="stylesheet" type="text/css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<div class="hgroup">
+    <h1>Link Google Home Account to Recipe Folder</h1>
+    <h3>Sign into your Recipe Folder Account</h3>
+</div>
+<form method="post" action="/auth?redirect_uri=<%= redirectUri %>&state=<%= state %>">
+    <% if (error) { %>
+    <div class="error">
+        <%= error %>
+    </div>
+    <% } %>
+    <div class="group">
+        <input id="email" name="email" type="text" value="<%= email %>"><span class="highlight"></span><span
+                class="bar"></span>
+        <label for="email">Email</label>
+    </div>
+    <div class="group">
+        <input id="password" name="password" type="password"><span class="highlight"></span><span class="bar"></span>
+        <label for="password">Password</label>
+    </div>
+    <button type="submit" class="button buttonBlue">Link Account
+        <div class="ripples"><span class="ripplesCircle"></span></div>
+    </button>
+</form>
+<script>
+
+    (function() {
+        document.querySelectorAll('input').forEach(function (el) {
+            el.addEventListener('blur', function (ev) {
+                if (el.value) {
+                    if (!el.classList.contains('used')) {
+                        el.classList.add('used');
+                    }
+                } else {
+                    if (el.classList.contains('used')) {
+                        el.classList.remove('used');
+                    }
+                }
+            })
+        })
+
+        var ripples = document.querySelector('.ripples');
+        ripples.addEventListener('click', function (e) {
+
+            var rect = ripples.parentNode.getBoundingClientRect();
+            var offset = {
+                top: rect.top + document.body.scrollTop,
+                left: rect.left + document.body.scrollLeft
+            };
+            var rippleCircle = document.querySelector('.ripplesCircle');
+            if (rippleCircle) {
+                rippleCircle.style.top = e.pageY - offset.top + 'px';
+                rippleCircle.style.left = e.pageX - offset.left + 'px';
+            }
+
+            if (!ripples.classList.contains('is-active')) {
+                ripples.classList.add('is-active');
+            }
+
+        });
+
+        ripples.addEventListener('animationend webkitAnimationEnd mozAnimationEnd oanimationend MSAnimationEnd', function (e) {
+            if (ripples.classList.contains('is-active')) {
+                ripples.classList.remove('is-active');
+            }
+        });
+    })();
+
+
+</script>
+</body>
+</html>
