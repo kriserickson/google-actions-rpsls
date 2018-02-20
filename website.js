@@ -39,6 +39,50 @@ function redirectToOauth(request, response, userId) {
     });
 }
 
+function signup(request, response) {
+    const email = request.body['email'];
+    if (email) {
+        const name = request.body['name'];
+        const password = request.body['password'];
+        models.User.findOne({email: email.toLowerCase()}, function (err, user) {
+            if (err) {
+                err = err.message;
+            } else if (!name || name.length < 3) {
+                err = 'You must provide a name of at least 3 letters'
+            } else if (!password || password.length < 6) {
+                err = 'You must provide a password of at least 6 letters'
+            }
+            if (err) {
+                response.render('signup', {
+                    error: err,
+                    email: email,
+                    name: name,
+                    redirectUri: request.query['redirect_uri'],
+                    state: request.query['state']
+                });
+            } else {
+                const newUser = new models.User({email: email, password: password, name: name});
+                newUser.save(function (err) {
+                    if (err) {
+                        console.error('Error adding user: ' + email + ' in auth.js|signupUserWithReq: ' + err);
+                        response.render('error', {error: 'DB Error'});
+                    } else {
+                        req.session.user_id = newUser.id;
+                        score(request, response);
+                    }
+                });
+            }
+        });
+    } else {
+        response.render('./login', {
+            error: '',
+            email: email,
+            redirectUri: request.query['redirect_uri'],
+            state: request.query['state']
+        });
+    }
+}
+
 function auth(request, response) {
 
     if (startsWith(request.query['redirect_uri'], 'https://oauth-redirect.googleusercontent.com/r/')) {
@@ -76,10 +120,31 @@ function auth(request, response) {
             }
         }
     } else {
-        console.error('Auth request sending invalid redirect uri: ' + request.query['redirect_uri']);
-        response.render('error_404');
+        const email = request.body['email'];
+        if (email) {
+            models.User.findOne({email: email.toLowerCase()}, function (err, user) {
+                if (err) {
+                    console.error('Error finding user ' + user.email + ' in auth.js|loginUserWithReq: ' + err);
+                    response.render('error', {error: 'Server Error, Try Again Later'});
+                    return;
+                }
+                if (user && user.authenticate(request.body['password'])) {
+                    request.session.user_id = user.id;
+                    score(request, response);
+                } else {
+                    console.error('Error logging in user, no user found');
+                    response.render('login', {
+                        error: 'Incorrect Email/Password',
+                        email: email,
+                        redirectUri: '',
+                        state: ''
+                    });
+                }
+            });
+        } else {
+            score(request, response);
+        }
     }
-
 }
 
 function token(request, response) {
@@ -126,7 +191,28 @@ function token(request, response) {
 }
 
 function score(request, response) {
+    if (request.session.user_id) {
+        models.User.findOne({user_id: request.session.user_id}, function (err, user) {
+            if (err) {
+                console.error('Error finding user ' + user.email + ' in auth.js|loginUserWithReq: ' + err);
+                response.render('error', {error: 'Server Error, Try Again Later'});
 
+            } else {
+                response.render('./score.ejs', {
+                    name: user.name,
+                    wins: user.wins,
+                    losses: user.losses
+                })
+            }
+        });
+    } else {
+        response.render('./login', {
+            error: '',
+            email: '',
+            redirectUri: '',
+            state: ''
+        });
+    }
 }
 
 module.exports = (config) => {
@@ -134,6 +220,7 @@ module.exports = (config) => {
     return {
         auth: auth,
         token: token,
-        score: score
+        score: score,
+        signup: signup
     };
 };

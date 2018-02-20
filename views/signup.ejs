@@ -5,10 +5,9 @@
 </head>
 <body>
 <div class="hgroup">
-    <h1>Link Google Home Account to Rock/Paper/Scissors/Lizard/Spock</h1>
-    <h3>Sign into your Account</h3>
+    <h1>Sign Up for a Rock/Paper/Scissors/Lizard/Spock Account</h1>
 </div>
-<form method="post" action="/auth?redirect_uri=<%= redirectUri %>&state=<%= state %>">
+<form method="post" action="/signup?redirect_uri=<%= redirectUri %>&state=<%= state %>">
     <% if (error) { %>
     <div class="error">
         <%= error %>
@@ -20,11 +19,15 @@
         <label for="email">Email</label>
     </div>
     <div class="group">
+        <input id="name" name="name" type="text" value="<%= name %>"><span class="highlight"></span><span
+                class="bar"></span>
+        <label for="name">Name</label>
+    </div>
+    <div class="group">
         <input id="password" name="password" type="password"><span class="highlight"></span><span class="bar"></span>
         <label for="password">Password</label>
     </div>
-    <a link="/signup">No Account, Signup Here</a>
-    <button type="submit" class="button buttonBlue">Link Account
+    <button type="submit" class="button buttonBlue">Sign Up
         <div class="ripples"><span class="ripplesCircle"></span></div>
     </button>
 </form>

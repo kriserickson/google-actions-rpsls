@@ -99,6 +99,7 @@ function defineModels(mongoose) {
                 type: String,
                 index: {unique: true}
             },
+            'name': String,
             'hashed_password': String,
             'salt': String,
             'wins': Number,
@@ -110,7 +111,7 @@ function defineModels(mongoose) {
                 return this._id.toHexString();
             });
 
-        User.virtual('gamesPlay')
+        User.virtual('gamesPlayed')
             .get(function () {
                 return this.wins + this.losses;
             });
